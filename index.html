@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BS2: DELUXE — glebayz!</title>
+
+<style>
+  :root{
+    --bg:#050506;
+    --panel:#0e0f12;
+    --text:#f0f0f0;
+    --muted:#6b6f78;
+    --accent:#f0f0f0;
+    --card-border:rgba(255,255,255,0.08);
+    --card-border-hover:rgba(255,255,255,0.2);
+    --btn-border:rgba(255,255,255,0.24);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100%;
+    background-color:var(--bg);
+    background-image:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(255,255,255,0.06), transparent 60%);
+    background-repeat:no-repeat;
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:56px 20px;
+    cursor:none;
+    transition:background-color .75s ease, color .75s ease;
+  }
+
+  body.light{
+    --bg:#ffffff;
+    --panel:#f5f5f5;
+    --text:#050506;
+    --muted:#5a5d64;
+    --accent:#050506;
+    --card-border:rgba(0,0,0,0.10);
+    --card-border-hover:rgba(0,0,0,0.24);
+    --btn-border:rgba(0,0,0,0.28);
+    background-color:#ffffff;
+  }
+
+  .artist, .album, .num, .label, .release-date,
+  .merch-title, .merch-note, .merch-card-name, .merch-card-price,
+  .merch-card, .buy-btn, .cta, .handle, .listen-link{
+    transition:color .75s ease, background-color .75s ease, border-color .75s ease;
+  }
+
+  body.touch{ cursor:auto; }
+  body.touch #customCursor{ display:none !important; }
+
+  #customCursor{
+    position:fixed;
+    top:0; left:0;
+    pointer-events:none;
+    z-index:9999;
+    will-change:transform;
+    transition:opacity .2s ease;
+    opacity:0;
+  }
+  #customCursor.ready{ opacity:1; }
+
+  .wrap{
+    width:100%;
+    max-width:420px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+  }
+  .logo{
+    width:130px;
+    height:auto;
+    opacity:0.95;
+    margin-bottom:32px;
+    filter:invert(1);
+    transition:filter .75s ease;
+  }
+  body.light .logo{ filter:invert(0); }
+
+  .cover-stage{ perspective:900px; }
+  .cover{
+    width:min(78vw, 320px);
+    height:min(78vw, 320px);
+    border-radius:4px;
+    overflow:hidden;
+    box-shadow: 0 40px 80px -30px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.06);
+    transform-style:preserve-3d;
+    transition:transform 0.15s ease-out, box-shadow 0.15s ease-out;
+    will-change:transform;
+  }
+  .cover.tilting{ transition:transform 0.05s linear; }
+  .cover:hover{
+    box-shadow: 0 50px 100px -30px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.1);
+  }
+  .cover img{
+    width:100%; height:100%;
+    object-fit:cover; display:block; pointer-events:none;
+  }
+
+  /* ---- кнопка «услышать это» под обложкой ---- */
+  .listen-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    width:100%;
+    margin-top:24px;
+    padding:16px 24px;
+    border-radius:999px;
+    border:1.5px solid var(--btn-border);
+    background:transparent;
+    color:var(--text);
+    font-size:16px;
+    font-weight:700;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    text-decoration:none;
+    cursor:none;
+    transition:background-color .2s ease, color .2s ease, border-color .2s ease, transform .15s ease;
+  }
+  .listen-link svg{ width:18px; height:18px; flex-shrink:0; }
+  .listen-link:hover{
+    background:var(--accent);
+    color:var(--bg);
+    border-color:var(--accent);
+    transform:translateY(-1px);
+  }
+  .listen-link:active{ transform:translateY(0); }
+
+  .artist{
+    margin:26px 0 10px;
+    font-weight:700;
+    font-size:clamp(28px, 7vw, 38px);
+    letter-spacing:0.01em;
+    line-height:1.1;
+  }
+  .album{
+    margin:0 0 30px;
+    font-size:15px; font-weight:500;
+    letter-spacing:0.01em;
+  }
+  .handle{
+    margin:0 0 30px;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .countdown{
+    display:flex; gap:18px; margin-bottom:10px;
+  }
+  .unit{
+    display:flex; flex-direction:column;
+    align-items:center; min-width:54px;
+  }
+  .num{
+    font-weight:700;
+    font-size:clamp(32px, 8.5vw, 44px);
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+    color:var(--text);
+  }
+  .label{
+    margin-top:4px; font-size:11px;
+    color:var(--muted); letter-spacing:0.04em;
+  }
+  .release-date{
+    color:var(--muted); font-size:13px; margin-bottom:34px;
+  }
+  .cta{
+    display:inline-flex;
+    align-items:center; justify-content:center;
+    width:100%; padding:16px 0;
+    border-radius:999px;
+    background:var(--accent);
+    color:var(--bg);
+    font-weight:600; font-size:16px;
+    text-decoration:none; border:none;
+    cursor:none;
+  }
+  .cta[disabled]{
+    background:transparent;
+    border:1.5px solid var(--card-border);
+    color:var(--muted);
+    cursor:none;
+  }
+
+  /* ---------- merch ---------- */
+  .merch{
+    width:min(94vw, 960px);
+    flex-shrink:0;
+    align-self:center;
+    margin-top:44px;
+    display:none; flex-direction:column; gap:22px;
+    opacity:0; transform:translateY(14px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  .merch.show{ display:flex; }
+  .merch.visible{ opacity:1; transform:translateY(0); }
+
+  .merch-title{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin:0;
+    font-size:11px; letter-spacing:0.16em;
+    text-transform:uppercase; color:var(--muted);
+  }
+  .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    animation:pulse 2.4s infinite;
+    transition:background-color .75s ease;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(240,240,240,.5);}
+    70%{box-shadow:0 0 0 8px rgba(240,240,240,0);}
+    100%{box-shadow:0 0 0 0 rgba(240,240,240,0);}
+  }
+
+  .merch-grid{
+    display:grid;
+    grid-template-columns: 1fr 2fr;
+    column-gap: 56px;
+    row-gap: 24px;
+    align-items: start;
+  }
+
+  .merch-card{
+    background:var(--panel);
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    overflow:hidden;
+    display:flex; flex-direction:column; text-align:left;
+  }
+  .merch-card:hover{ border-color:var(--card-border-hover); }
+
+  .merch-card > img{
+    width:100%;
+    aspect-ratio:1 / 1;
+    object-fit:cover;
+    display:block;
+    background:#111;
+    cursor:none;
+  }
+
+  .merch-images{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1px;
+    background:var(--card-border);
+  }
+  .merch-image{
+    position:relative;
+    width:100%;
+    overflow:hidden;
+    background:#111;
+  }
+  .merch-image img{
+    width:100%;
+    aspect-ratio:1 / 1;
+    object-fit:cover;
+    display:block;
+    cursor:none;
+    transition:transform .35s ease, opacity .2s ease;
+  }
+  .merch-image:hover img{
+    transform:scale(1.03);
+    opacity:.92;
+  }
+  .merch-image .tag{
+    position:absolute;
+    top:10px; left:10px;
+    padding:4px 10px;
+    font-size:10px;
+    letter-spacing:0.14em;
+    color:#f0f0f0;
+    background:rgba(0,0,0,0.6);
+    border:1px solid rgba(255,255,255,0.14);
+    border-radius:999px;
+    pointer-events:none;
+  }
+
+  .merch-card-body{
+    padding:18px 22px 22px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .merch-card-name{
+    font-size:17px; font-weight:600;
+    letter-spacing:0.01em;
+  }
+  .merch-card-price{
+    font-size:15px; color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+  .buy-btn{
+    margin-top:10px;
+    padding:14px 0;
+    border-radius:999px;
+    background:transparent;
+    color:var(--text);
+    border:1.5px solid var(--btn-border);
+    font:inherit; font-size:15px; font-weight:600;
+    cursor:none;
+  }
+  .buy-btn:hover{
+    background:var(--accent);
+    color:var(--bg);
+    border-color:var(--accent);
+  }
+  .buy-btn:active{ transform:translateY(1px); }
+  .buy-btn[disabled]{
+    background:transparent;
+    border-color:var(--card-border);
+    color:var(--muted);
+    cursor:none;
+  }
+  .buy-btn[disabled]:hover{
+    background:transparent;
+    color:var(--muted);
+    border-color:var(--card-border);
+  }
+  .buy-btn[disabled]:active{ transform:none; }
+
+  .merch-note{
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+    letter-spacing:0.04em;
+    margin:2px 0 0;
+  }
+
+  /* ---------- модалка заказа (без blur — не грузит GPU) ---------- */
+  .modal{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.88);
+    display:none; align-items:center; justify-content:center;
+    z-index:1000; padding:20px;
+  }
+  .modal.show{ display:flex; }
+  .modal-box{
+    background:var(--panel);
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    padding:30px 24px 24px;
+    max-width:340px; width:100%;
+    text-align:center; position:relative;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.5);
+    color:var(--text);
+  }
+  .modal-close{
+    position:absolute; top:6px; right:8px;
+    background:transparent; border:none;
+    color:var(--muted); font-size:22px; line-height:1;
+    padding:8px 10px;
+    cursor:none;
+    transition:color .15s ease;
+  }
+  .modal-close:hover{ color:var(--text); }
+  .modal-title{
+    font-size:11px; color:var(--muted);
+    letter-spacing:0.16em; text-transform:uppercase;
+    margin:0 0 16px;
+  }
+  .modal-item{
+    font-size:15px; color:var(--text);
+    margin:0 0 18px; font-weight:600;
+  }
+  .modal-tg{
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:17px; font-weight:700;
+    color:var(--bg);
+    background:var(--accent);
+    text-decoration:none;
+    padding:13px 24px; border-radius:999px;
+    border:1.5px solid var(--accent);
+    cursor:none;
+    transition:opacity .15s ease;
+  }
+  .modal-tg:hover{ opacity:.85; }
+  .modal-sub{
+    margin:18px 0 0; font-size:12px;
+    color:var(--muted); line-height:1.4;
+  }
+
+  /* ---------- лайтбокс ---------- */
+  .lightbox{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.94);
+    display:none; align-items:center; justify-content:center;
+    z-index:2000; padding:20px;
+    cursor:none;
+  }
+  .lightbox.show{ display:flex; }
+  .lightbox img{
+    max-width:min(92vw, 900px);
+    max-height:88vh;
+    width:auto; height:auto;
+    object-fit:contain;
+    border-radius:8px;
+    box-shadow:0 40px 80px -20px rgba(0,0,0,0.9);
+  }
+  .lightbox-hint{
+    position:absolute;
+    bottom:24px; left:0; right:0;
+    text-align:center;
+    font-size:11px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:#6b6f78;
+  }
+
+  @media (max-width:640px){
+    .merch{ width:94vw; }
+    .merch-grid{
+      grid-template-columns:1fr 1fr;
+      column-gap:16px;
+    }
+    .merch-card > img{ aspect-ratio:1 / 1; }
+    .merch-grid > .merch-card:first-child{
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+</head>
+<body>
+  <img id="customCursor" src="cursor.png" alt="" draggable="false">
+
+  <div class="wrap">
+    <img class="logo" src="logo.png" alt="glebayz studios">
+
+    <div class="cover-stage">
+    <div class="cover" id="coverEl">
+      <img src="cover.jpg" alt="BS2: DELUXE cover">
+    </div>
+    </div>
+
+    <!-- кнопка «услышать это» -->
+    <a class="listen-link"
+       href="https://band.link/xEheK"
+       target="_blank"
+       rel="noopener">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 18V5l12-2v13"/>
+        <circle cx="6" cy="18" r="3"/>
+        <circle cx="18" cy="16" r="3"/>
+      </svg>
+      УСЛЫШАТЬ ЭТО
+    </a>
+
+    <h1 class="artist">BS2: DELUXE</h1>
+    <p class="album">glebayz! · @lonelylonelylonely</p>
+
+    <div class="countdown" id="countdown">
+      <div class="unit"><div class="num" id="dd">00</div><div class="label">days</div></div>
+      <div class="unit"><div class="num" id="hh">00</div><div class="label">hours</div></div>
+      <div class="unit"><div class="num" id="mm">00</div><div class="label">min</div></div>
+      <div class="unit"><div class="num" id="ss">00</div><div class="label">sec</div></div>
+    </div>
+    <p class="release-date">September 25, 2026 · 14:00</p>
+
+    <button class="cta" id="ctaBtn" disabled>Coming soon</button>
+
+    <div class="merch" id="merch" aria-hidden="true">
+      <p class="merch-title"><span class="dot"></span>Deluxe drop · лимитировано</p>
+
+      <div class="merch-grid">
+        <!-- CD -->
+        <div class="merch-card">
+          <img src="cd.png" alt="CD BAGIRA SH*TNESS 2" data-full="cd.png">
+          <div class="merch-card-body">
+            <div class="merch-card-name">CD BAGIRA SH*TNESS 2</div>
+            <div class="merch-card-price">1200 ₽</div>
+            <button class="buy-btn" type="button" data-item="CD BAGIRA SH*TNESS 2">Заказать</button>
+          </div>
+        </div>
+
+        <!-- Лонгслив -->
+        <div class="merch-card">
+          <div class="merch-images">
+            <div class="merch-image">
+              <img src="longsleeve-front.png" alt="CERTIFIED CAT SH*T LONG SLEEVE — спереди" data-full="longsleeve-front.png">
+              <span class="tag">спереди</span>
+            </div>
+            <div class="merch-image">
+              <img src="longsleeve-back.png" alt="CERTIFIED CAT SH*T LONG SLEEVE — сзади" data-full="longsleeve-back.png">
+              <span class="tag">сзади</span>
+            </div>
+          </div>
+          <div class="merch-card-body">
+            <div class="merch-card-name">CERTIFIED CAT SH*T LONG SLEEVE</div>
+            <div class="merch-card-price">3000 ₽</div>
+            <button class="buy-btn" type="button" data-item="CERTIFIED CAT SH*T LONG SLEEVE" disabled>Скоро</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="merch-note">*доставка только по России</p>
+    </div>
+  </div>
+
+  <div class="modal" id="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose" type="button" aria-label="Закрыть">×</button>
+      <p class="modal-title">Оформление заказа</p>
+      <p class="modal-item" id="modalItem">CD BAGIRA SH*TNESS 2</p>
+      <a class="modal-tg" id="modalTg" href="https://t.me/backtotheidea" target="_blank" rel="noopener">@backtotheidea</a>
+      <p class="modal-sub">Напишите нам в Telegram — укажите товар и адрес доставки.<br>*доставка только по России</p>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <img id="lightboxImg" src="" alt="">
+    <span class="lightbox-hint">клик — закрыть</span>
+  </div>
+
+<script>
+  /* ================= НАСТРОЙКИ ================= */
+  const TEST_MODE = false;
+  const target   = new Date(2026, 8, 25, 14, 0, 0).getTime();
+  const CURSOR_SIZE = 64;
+
+  // Где именно «точка клика» на картинке курсора:
+  //   0   = край слева/сверху
+  //   0.5 = центр (по умолчанию)
+  //   1   = край справа/снизу
+  const CURSOR_HOTSPOT_X = 0.5;
+  const CURSOR_HOTSPOT_Y = 0.5;
+  /* ============================================= */
+
+  const dd = document.getElementById('dd');
+  const hh = document.getElementById('hh');
+  const mm = document.getElementById('mm');
+  const ss = document.getElementById('ss');
+  const btn = document.getElementById('ctaBtn');
+  const countdownEl = document.getElementById('countdown');
+  const releaseDate = document.querySelector('.release-date');
+
+  const merchEl   = document.getElementById('merch');
+  const modalEl   = document.getElementById('modal');
+  const modalClose= document.getElementById('modalClose');
+  const modalItem = document.getElementById('modalItem');
+
+  const lightboxEl  = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+
+  let unlocked = false;
+  let timer;
+
+  const pad = n => String(n).padStart(2,'0');
+
+  function showMerch(){
+    if(merchEl.classList.contains('show')) return;
+    merchEl.classList.add('show');
+    merchEl.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(() => merchEl.classList.add('visible'));
+    requestAnimationFrame(checkBg);
+  }
+
+  function unlock(){
+    if(unlocked) return;
+    unlocked = true;
+    // полностью убираем отсчёт, дату и кнопку
+    countdownEl.style.display = 'none';
+    releaseDate.style.display = 'none';
+    btn.style.display = 'none';
+    showMerch();
+  }
+
+  function tick(){
+    const diff = target - Date.now();
+    if(diff <= 0){ clearInterval(timer); unlock(); return; }
+    dd.textContent = pad(Math.floor(diff / 86400000));
+    hh.textContent = pad(Math.floor((diff % 86400000) / 3600000));
+    mm.textContent = pad(Math.floor((diff % 3600000) / 60000));
+    ss.textContent = pad(Math.floor((diff % 60000) / 1000));
+  }
+
+  tick();
+  timer = setInterval(tick, 1000);
+
+  if(TEST_MODE){ showMerch(); }
+
+  /* ----- плавное переключение фона ----- */
+  function checkBg(){
+    if(!merchEl.classList.contains('show')){
+      document.body.classList.remove('light');
+      return;
+    }
+    const rect = merchEl.getBoundingClientRect();
+    const trigger = window.innerHeight * 0.55;
+    if(rect.top < trigger && rect.bottom > 0){
+      document.body.classList.add('light');
+    } else {
+      document.body.classList.remove('light');
+    }
+  }
+  window.addEventListener('scroll', checkBg, { passive: true });
+  window.addEventListener('resize', checkBg);
+  checkBg();
+
+  /* ----- модалка заказа ----- */
+  const openModal = name => {
+    modalItem.textContent = name;
+    modalEl.classList.add('show');
+    modalEl.setAttribute('aria-hidden', 'false');
+  };
+  const closeModal = () => {
+    modalEl.classList.remove('show');
+    modalEl.setAttribute('aria-hidden', 'true');
+  };
+
+  document.querySelectorAll('.buy-btn').forEach(b => {
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      if(b.disabled) return;
+      openModal(b.dataset.item);
+    });
+  });
+  modalClose.addEventListener('click', closeModal);
+  modalEl.addEventListener('click', e => { if(e.target === modalEl) closeModal(); });
+
+  /* ----- лайтбокс ----- */
+  const openLightbox = src => {
+    lightboxImg.src = src;
+    lightboxEl.classList.add('show');
+    lightboxEl.setAttribute('aria-hidden', 'false');
+  };
+  const closeLightbox = () => {
+    lightboxEl.classList.remove('show');
+    lightboxEl.setAttribute('aria-hidden', 'true');
+    lightboxImg.src = '';
+  };
+
+  document.querySelectorAll('.merch-card img[data-full]').forEach(img => {
+    img.addEventListener('click', e => {
+      e.stopPropagation();
+      openLightbox(img.dataset.full);
+    });
+  });
+  lightboxEl.addEventListener('click', closeLightbox);
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){
+      if(lightboxEl.classList.contains('show')) closeLightbox();
+      else if(modalEl.classList.contains('show')) closeModal();
+    }
+  });
+
+  /* ================= КАСТОМНЫЙ КУРСОР ================= */
+  const cursorEl = document.getElementById('customCursor');
+  const isTouch = matchMedia('(hover: none)').matches || 'ontouchstart' in window;
+
+  if(isTouch){
+    document.body.classList.add('touch');
+  } else {
+    cursorEl.style.width  = CURSOR_SIZE + 'px';
+    cursorEl.style.height = 'auto';
+
+    cursorEl.addEventListener('load', () => cursorEl.classList.add('ready'));
+    if(cursorEl.complete) cursorEl.classList.add('ready');
+
+    document.addEventListener('mousemove', e => {
+      const w = cursorEl.offsetWidth  || CURSOR_SIZE;
+      const h = cursorEl.offsetHeight || CURSOR_SIZE;
+      cursorEl.style.transform =
+        `translate3d(${e.clientX - w * CURSOR_HOTSPOT_X}px, ` +
+        `${e.clientY - h * CURSOR_HOTSPOT_Y}px, 0)`;
+    });
+
+    document.addEventListener('mouseleave', () => cursorEl.style.opacity = '0');
+    document.addEventListener('mouseenter', () => cursorEl.style.opacity = '');
+  }
+  /* ==================================================== */
+
+  /* ----- 2.5D tilt ----- */
+  const coverEl = document.getElementById('coverEl');
+  const stage = coverEl.parentElement;
+  const MAX_TILT = 14;
+
+  function handleMove(e){
+    const rect = coverEl.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    coverEl.classList.add('tilting');
+    coverEl.style.transform =
+      `rotateX(${(0.5 - y) * MAX_TILT * 2}deg) rotateY(${(x - 0.5) * MAX_TILT * 2}deg) scale(1.03)`;
+  }
+  function resetTilt(){
+    coverEl.classList.remove('tilting');
+    coverEl.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
+  }
+
+  stage.addEventListener('mousemove', handleMove);
+  stage.addEventListener('mouseleave', resetTilt);
+  stage.addEventListener('touchmove', e => {
+    const t = e.touches[0]; if(t) handleMove(t);
+  }, { passive: true });
+  stage.addEventListener('touchend', resetTilt);
+</script>
+</body>
+</html>
